@@ -1,0 +1,34 @@
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QTextEdit, QLabel, \
+    QCheckBox, QGroupBox, QRadioButton, QFileDialog
+from PyQt5.QtCore import pyqtSlot
+import secrets
+import string
+
+
+class PasswordCipherApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+
+    # Layouts and UI elements initialization
+    # Password Generator UI
+    # File Encryption/Decryption UI
+    # Connecting buttons to their functions
+
+    def generate_password(self):
+        # Password generation logic
+        pass
+
+    def encrypt_decrypt_file(self):
+        # File encryption/decryption logic
+        pass
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    ex = PasswordCipherApp()
+    ex.show()
+    sys.exit(app.exec_())
