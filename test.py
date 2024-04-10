@@ -16,7 +16,7 @@ class PasswordCipherApp(QWidget):
         self.mainLayout = QVBoxLayout()
 
         self.passwordGeneratorGroup = QGroupBox('Password Generator')
-        self.fileCipherGroup = QGroupBox('File Encryption')
+        self.fileCipherGroup = QGroupBox('File Cipher')
 
         self.setupPasswordGeneratorUI()
         self.setupFileCipherUI()
