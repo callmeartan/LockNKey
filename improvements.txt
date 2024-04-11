@@ -1,2 +1,0 @@
-Password Strength Indicator:
-You could add a feature to assess and display the strength of the generated password.

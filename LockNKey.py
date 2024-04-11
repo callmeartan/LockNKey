@@ -2,6 +2,7 @@ import sys
 import secrets
 import string
 import os
+import random
 
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit, QTextEdit, QGroupBox, \
@@ -110,14 +111,17 @@ class PasswordCipherApp(QWidget):
     def generate_password(self):
         try:
             length = int(self.passwordLengthLineEdit.text())
-            if length > 0:
-                password = ''.join(
-                    secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(length))
-                self.generatedPasswordTextEdit.setText(password)
-                strength = self.assess_password_strength(password)
-                self.passwordStrengthLabel.setText(f'Password Strength: {strength}')
-            else:
+            if length <= 0:
                 QMessageBox.warning(self, "Invalid Input", "Please enter a positive number.")
+                return
+
+            characters = string.ascii_letters + string.digits + string.punctuation
+            password = ''.join(random.choices(characters, k=length))  # Using random.choices() here
+            self.generatedPasswordTextEdit.setText(password)
+            strength, color = self.assess_password_strength(password)
+            self.passwordStrengthLabel.setText(f'Password Strength: {strength}')
+            self.passwordStrengthLabel.setStyleSheet(f"color: {color};")  # Apply color based on strength
+
         except ValueError:
             QMessageBox.warning(self, "Invalid Input", "Please enter a valid number.")
 
@@ -131,11 +135,11 @@ class PasswordCipherApp(QWidget):
         score = sum([has_upper, has_lower, has_digit, has_special, length >= 8])
 
         if score == 5:
-            return "Strong"
+            return "Strong", "green"
         elif score >= 3:
-            return "Medium"
+            return "Medium", "orange"
         else:
-            return "Weak"
+            return "Weak", "red"
 
     def ensure_key_exists(self):
         """Check if the 'secret.key' file exists and create it if not."""
