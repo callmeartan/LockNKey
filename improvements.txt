@@ -1,0 +1,12 @@
+
+
+File Encryption/Decryption Feedback:
+It would enhance user experience to provide GUI feedback about the
+success or failure of file operations, rather than just printing to the console.
+
+Redundant else Clause in select_file:
+The else clause in select_file method sets self.selectedFilePath to None, which is redundant since you're checking for self.
+selectedFilePath existence and value in encrypt_decrypt_file. You could simply not set it if no file is selected.
+
+Password Strength Indicator:
+You could add a feature to assess and display the strength of the generated password.

@@ -2,33 +2,73 @@ import sys
 import secrets
 import string
 import os
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit, QTextEdit, QGroupBox, QRadioButton, QFileDialog
+
+from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit, QTextEdit, QGroupBox, \
+    QRadioButton, QFileDialog, QMessageBox, QProgressBar
 from cryptography.fernet import Fernet
+
+
+class FileWorker(QThread):
+    finished = pyqtSignal(str)
+    error = pyqtSignal(str)
+    progress = pyqtSignal(int)
+
+    def __init__(self, path, mode, key):
+        super().__init__()
+        self.path = path
+        self.mode = mode
+        self.key = key
+
+    def run(self):
+        try:
+            fernet = Fernet(self.key)
+            with open(self.path, 'rb') as file:
+                file_data = file.read()
+
+            output_data = fernet.encrypt(file_data) if self.mode == 'encrypt' else fernet.decrypt(file_data)
+            output_file_path = self.path + (".encrypted" if self.mode == 'encrypt' else ".decrypted")
+            with open(output_file_path, 'wb') as file:
+                file.write(output_data)
+
+            self.finished.emit(f"File {self.mode}ed. Saved as: {output_file_path}")
+        except Exception as e:
+            self.error.emit(f"Operation failed: {str(e)}")
+
 
 class PasswordCipherApp(QWidget):
     def __init__(self):
         super().__init__()
-        # Ensure the encryption key exists
         self.ensure_key_exists()
+        self.selectedFilePath = None
         self.initUI()
 
     def initUI(self):
+        print("Initializing UI...")
         self.setWindowTitle('LockNKey')
         self.setGeometry(100, 100, 400, 300)
 
         self.mainLayout = QVBoxLayout()
+        print("Main layout created.")
 
         self.passwordGeneratorGroup = QGroupBox('Password Generator')
         self.fileCipherGroup = QGroupBox('Encryption')
+        print("Groups created.")
 
         self.setupPasswordGeneratorUI()
         self.setupFileCipherUI()
+        print("UI setup functions called.")
 
         self.mainLayout.addWidget(self.passwordGeneratorGroup)
         self.mainLayout.addWidget(self.fileCipherGroup)
+        print("Widgets added to layout.")
+
+        self.progressBar = QProgressBar(self)
+        self.mainLayout.addWidget(self.progressBar)
+        print("Progress bar added.")
 
         self.setLayout(self.mainLayout)
-
+        print("Layout set for the main window.")
     def setupPasswordGeneratorUI(self):
         layout = QVBoxLayout()
 
@@ -52,6 +92,7 @@ class PasswordCipherApp(QWidget):
         self.decryptRadioButton = QRadioButton("Decrypt")
         self.fileSelectionButton = QPushButton("Select File")
         self.encryptDecryptButton = QPushButton("Encrypt/Decrypt")
+        self.encryptDecryptButton.clicked.connect(self.encrypt_decrypt_file)
 
         layout.addWidget(self.encryptRadioButton)
         layout.addWidget(self.decryptRadioButton)
@@ -96,32 +137,25 @@ class PasswordCipherApp(QWidget):
             self.selectedFilePath = None
 
     def encrypt_decrypt_file(self):
-        if not hasattr(self, 'selectedFilePath') or not self.selectedFilePath:
-            print("No file selected.")
+        if not self.selectedFilePath:
+            QMessageBox.warning(self, "Error", "No file selected.")
             return
 
         key = self.load_key()
-        fernet = Fernet(key)
+        mode = 'encrypt' if self.encryptRadioButton.isChecked() else 'decrypt'
+        self.worker = FileWorker(self.selectedFilePath, mode, key)
+        self.worker.finished.connect(self.on_operation_complete)
+        self.worker.error.connect(self.on_operation_error)
+        self.worker.progress.connect(self.progressBar.setValue)
+        self.worker.start()
 
-        with open(self.selectedFilePath, 'rb') as file:
-            file_data = file.read()
+    def on_operation_complete(self, message):
+        self.progressBar.setValue(100)  # Ensure the progress bar shows completion
+        QMessageBox.information(self, "Operation Complete", message)
 
-        if self.encryptRadioButton.isChecked():
-            encrypted_data = fernet.encrypt(file_data)
-            encrypted_file_path = self.selectedFilePath + ".encrypted"  # Append '.encrypted' to the original file name
-            with open(encrypted_file_path, 'wb') as file:
-                file.write(encrypted_data)
-            print(f"File encrypted. Encrypted file saved as: {encrypted_file_path}")
-        elif self.decryptRadioButton.isChecked():
-            try:
-                decrypted_data = fernet.decrypt(file_data)
-                decrypted_file_path = self.selectedFilePath.replace(".encrypted",
-                                                                    "")  # Assuming the encrypted files end with '.encrypted'
-                with open(decrypted_file_path, 'wb') as file:
-                    file.write(decrypted_data)
-                print(f"File decrypted. Decrypted file saved as: {decrypted_file_path}")
-            except Exception as e:
-                print("Decryption failed. Are you sure the file is encrypted?")
+    def on_operation_error(self, message):
+        self.progressBar.reset()  # Reset the progress bar on error
+        QMessageBox.warning(self, "Operation Failed", message)
 
 
 if __name__ == "__main__":
