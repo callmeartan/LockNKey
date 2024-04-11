@@ -69,22 +69,25 @@ class PasswordCipherApp(QWidget):
 
         self.setLayout(self.mainLayout)
         print("Layout set for the main window.")
+
+        self.generatePasswordButton.clicked.connect(self.generate_password)
+
     def setupPasswordGeneratorUI(self):
         layout = QVBoxLayout()
 
         self.passwordLengthLineEdit = QLineEdit()
         self.generatePasswordButton = QPushButton('Generate Password')
         self.generatedPasswordTextEdit = QTextEdit()
+        self.passwordStrengthLabel = QLabel('Password Strength: None')  # Initialize the label
 
         layout.addWidget(QLabel('Password Length:'))
         layout.addWidget(self.passwordLengthLineEdit)
         layout.addWidget(self.generatePasswordButton)
         layout.addWidget(QLabel('Generated Password:'))
         layout.addWidget(self.generatedPasswordTextEdit)
+        layout.addWidget(self.passwordStrengthLabel)  # Add the label to the layout
 
         self.passwordGeneratorGroup.setLayout(layout)
-
-        self.generatePasswordButton.clicked.connect(self.generate_password)
 
     def setupFileCipherUI(self):
         layout = QVBoxLayout()
@@ -105,9 +108,34 @@ class PasswordCipherApp(QWidget):
         self.encryptDecryptButton.clicked.connect(self.encrypt_decrypt_file)
 
     def generate_password(self):
-        length = int(self.passwordLengthLineEdit.text())
-        password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length))
-        self.generatedPasswordTextEdit.setText(password)
+        try:
+            length = int(self.passwordLengthLineEdit.text())
+            if length > 0:
+                password = ''.join(
+                    secrets.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(length))
+                self.generatedPasswordTextEdit.setText(password)
+                strength = self.assess_password_strength(password)
+                self.passwordStrengthLabel.setText(f'Password Strength: {strength}')
+            else:
+                QMessageBox.warning(self, "Invalid Input", "Please enter a positive number.")
+        except ValueError:
+            QMessageBox.warning(self, "Invalid Input", "Please enter a valid number.")
+
+    def assess_password_strength(self, password):
+        length = len(password)
+        has_upper = any(c.isupper() for c in password)
+        has_lower = any(c.islower() for c in password)
+        has_digit = any(c.isdigit() for c in password)
+        has_special = any(c in string.punctuation for c in password)
+
+        score = sum([has_upper, has_lower, has_digit, has_special, length >= 8])
+
+        if score == 5:
+            return "Strong"
+        elif score >= 3:
+            return "Medium"
+        else:
+            return "Weak"
 
     def ensure_key_exists(self):
         """Check if the 'secret.key' file exists and create it if not."""
