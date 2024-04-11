@@ -13,13 +13,13 @@ class PasswordCipherApp(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('Password Cipher App')
+        self.setWindowTitle('LockNKey')
         self.setGeometry(100, 100, 400, 300)
 
         self.mainLayout = QVBoxLayout()
 
         self.passwordGeneratorGroup = QGroupBox('Password Generator')
-        self.fileCipherGroup = QGroupBox('File Cipher')
+        self.fileCipherGroup = QGroupBox('Encryption')
 
         self.setupPasswordGeneratorUI()
         self.setupFileCipherUI()
