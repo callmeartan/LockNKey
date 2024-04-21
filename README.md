@@ -59,4 +59,4 @@ If you're ready to contribute to the project, please fork the repository and use
 
 ## Licensing
 
-The code in this project is licensed under MIT license. See the [LICENSE](LICENSE) file for more information.
+The code in this project is licensed under MIT license.
