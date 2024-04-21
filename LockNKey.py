@@ -7,6 +7,7 @@ import random
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit, QTextEdit, QGroupBox, \
     QRadioButton, QFileDialog, QMessageBox, QProgressBar
+from PyQt5.QtGui import QClipboard
 from cryptography.fernet import Fernet
 
 
@@ -72,12 +73,14 @@ class PasswordCipherApp(QWidget):
         print("Layout set for the main window.")
 
         self.generatePasswordButton.clicked.connect(self.generate_password)
+        self.copyToClipboardButton.clicked.connect(self.copy_to_clipboard)
 
     def setupPasswordGeneratorUI(self):
         layout = QVBoxLayout()
 
         self.passwordLengthLineEdit = QLineEdit()
         self.generatePasswordButton = QPushButton('Generate Password')
+        self.copyToClipboardButton = QPushButton('Copy to Clipboard')  # Add copy button
         self.generatedPasswordTextEdit = QTextEdit()
         self.passwordStrengthLabel = QLabel('Password Strength: None')  # Initialize the label
 
@@ -87,6 +90,7 @@ class PasswordCipherApp(QWidget):
         layout.addWidget(QLabel('Generated Password:'))
         layout.addWidget(self.generatedPasswordTextEdit)
         layout.addWidget(self.passwordStrengthLabel)  # Add the label to the layout
+        layout.addWidget(self.copyToClipboardButton)  # Add copy button
 
         self.passwordGeneratorGroup.setLayout(layout)
 
@@ -124,6 +128,12 @@ class PasswordCipherApp(QWidget):
 
         except ValueError:
             QMessageBox.warning(self, "Invalid Input", "Please enter a valid number.")
+
+    def copy_to_clipboard(self):
+        clipboard = QApplication.clipboard()
+        password = self.generatedPasswordTextEdit.toPlainText()
+        clipboard.setText(password)
+        QMessageBox.information(self, "Copied", "Password copied to clipboard.")
 
     def assess_password_strength(self, password):
         length = len(password)
